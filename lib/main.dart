@@ -1,35 +1,52 @@
 import 'package:english_words/english_words.dart';
 import 'package:flutter/material.dart';
 
+// メイン関数
 void main() {
   runApp(MyApp());
 }
 
+// アプリ本体
 class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Welcome to Flutter',
+      theme: ThemeData(primaryColor: Colors.white),
       home: RandomWords(),
     );
   }
 }
 
+// アプリのコードはここから
+// ランダムな言葉を作るクラス
 class RandomWords extends StatefulWidget {
   @override
   _RandomWordsState createState() => _RandomWordsState();
 }
 
 class _RandomWordsState extends State<RandomWords> {
+  // []にリストを作る
   final _suggestions = <WordPair>[];
+  // 文字サイズを18ピクセルにするコード
+  final _saved = <WordPair>{};
   final _biggerFont = const TextStyle(fontSize: 18);
   @override
   Widget build(BuildContext context) {
+    // Scaffoldは足場
     return Scaffold(
+      // AppBarはアプリバー
       appBar: AppBar(
         title: const Text('Startup Name Generator'),
+        actions: [
+          IconButton(
+            icon: Icon(Icons.list),
+            onPressed: _pushSaved,
+          )
+        ],
       ),
       body: Center(
+        // 画面の本体
         child: _buildSuggestions(),
       ),
     );
@@ -53,11 +70,60 @@ class _RandomWordsState extends State<RandomWords> {
     );
   }
 
+// リストの横部分を作る関数（メソッド）
   Widget _buildRow(WordPair pair) {
+    final alreadySaved = _saved.contains(pair);
     return ListTile(
       title: Text(
         pair.asPascalCase,
         style: _biggerFont,
+      ),
+      trailing: Icon(
+        alreadySaved ? Icons.favorite : Icons.favorite_border,
+        color: alreadySaved ? Colors.red : null,
+      ),
+      onTap: () {
+        setState(
+          () {
+            if (alreadySaved) {
+              _saved.remove(pair);
+            } else {
+              _saved.add(pair);
+            }
+          },
+        );
+      },
+    );
+  }
+
+  void _pushSaved() {
+    //画面が変わる
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        // NEW lines from here...
+        builder: (BuildContext context) {
+          final tiles = _saved.map(
+            (WordPair pair) {
+              return ListTile(
+                title: Text(
+                  pair.asPascalCase,
+                  style: _biggerFont,
+                ),
+              );
+            },
+          );
+          final divided = ListTile.divideTiles(
+            context: context,
+            tiles: tiles,
+          ).toList();
+// 次のページ
+          return Scaffold(
+            appBar: AppBar(
+              title: Text('Saved Suggestions'),
+            ),
+            body: ListView(children: divided),
+          );
+        }, // ...to here.
       ),
     );
   }
